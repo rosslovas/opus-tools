@@ -5,3 +5,8 @@ audio in the Opus format.
 
 For more information on Opus see http://www.opus-codec.org/
 
+
+This fork adds --force-gain and --no-encoder-comments to opusenc.
+force-gain allows you to specify the gain in the header of the output file.
+no-encoder-comments prevents ENCODER and ENCODER_OPTIONS comments
+from being written to the output file.
