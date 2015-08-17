@@ -129,6 +129,7 @@ void usage(void)
   printf("  filename.opus     compressed file\n");
   printf("  -                 stdout\n");
   printf("\nEncoding options:\n");
+  printf(" --force-gain n     Force gain (int, dB * 256)\n");
   printf(" --bitrate n.nnn    Target bitrate in kbit/sec (6-256/channel)\n");
   printf(" --vbr              Use variable bitrate encoding (default)\n");
   printf(" --cvbr             Use constrained variable bitrate encoding\n");
@@ -252,6 +253,7 @@ int main(int argc, char **argv)
   struct option long_options[] =
   {
     {"quiet", no_argument, NULL, 0},
+    {"force-gain", required_argument, NULL, 0},
     {"bitrate", required_argument, NULL, 0},
     {"hard-cbr",no_argument,NULL, 0},
     {"vbr",no_argument,NULL, 0},
@@ -406,6 +408,8 @@ int main(int argc, char **argv)
       case 0:
         if(strcmp(long_options[option_index].name,"quiet")==0){
           quiet=1;
+        }else if(strcmp(long_options[option_index].name,"force-gain")==0){
+          inopt.gain=atoi(optarg);
         }else if(strcmp(long_options[option_index].name,"bitrate")==0){
           bitrate=atof(optarg)*1000.;
         }else if(strcmp(long_options[option_index].name,"hard-cbr")==0){
