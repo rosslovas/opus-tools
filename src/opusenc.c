@@ -129,6 +129,7 @@ void usage(void)
   printf("  filename.opus     compressed file\n");
   printf("  -                 stdout\n");
   printf("\nEncoding options:\n");
+  printf(" --no-encoder-comments  Don't add ENCODER and ENCODER_OPTIONS comments\n");
   printf(" --force-gain n     Force gain (int, dB * 256)\n");
   printf(" --bitrate n.nnn    Target bitrate in kbit/sec (6-256/channel)\n");
   printf(" --vbr              Use variable bitrate encoding (default)\n");
@@ -253,6 +254,7 @@ int main(int argc, char **argv)
   struct option long_options[] =
   {
     {"quiet", no_argument, NULL, 0},
+    {"no-encoder-comments", no_argument, NULL, 0},
     {"force-gain", required_argument, NULL, 0},
     {"bitrate", required_argument, NULL, 0},
     {"hard-cbr",no_argument,NULL, 0},
@@ -333,6 +335,7 @@ int main(int argc, char **argv)
   int                last_spin_len=0;
   /*Settings*/
   int                quiet=0;
+  int                encoder_comments=1;
   int                max_frame_bytes;
   opus_int32         bitrate=-1;
   opus_int32         rate=48000;
@@ -391,8 +394,6 @@ int main(int argc, char **argv)
   /*Vendor string should just be the encoder library,
     the ENCODER comment specifies the tool used.*/
   comment_init(&inopt.comments, &inopt.comments_length, opus_version);
-  snprintf(ENCODER_string, sizeof(ENCODER_string), "opusenc from %s %s",PACKAGE_NAME,PACKAGE_VERSION);
-  comment_add(&inopt.comments, &inopt.comments_length, "ENCODER", ENCODER_string);
 
   /*Process command-line options*/
   cline_size=0;
@@ -408,6 +409,8 @@ int main(int argc, char **argv)
       case 0:
         if(strcmp(long_options[option_index].name,"quiet")==0){
           quiet=1;
+        }else if(strcmp(long_options[option_index].name,"no-encoder-comments")==0){
+          encoder_comments=0;
         }else if(strcmp(long_options[option_index].name,"force-gain")==0){
           inopt.gain=atoi(optarg);
         }else if(strcmp(long_options[option_index].name,"bitrate")==0){
@@ -600,6 +603,7 @@ int main(int argc, char **argv)
         exit(1);
         break;
     }
+
     if(save_cmd && cline_size<(int)sizeof(ENCODER_string)){
       ret=snprintf(&ENCODER_string[cline_size], sizeof(ENCODER_string)-cline_size, "%s--%s",cline_size==0?"":" ",long_options[option_index].name);
       if(ret<0||ret>=((int)sizeof(ENCODER_string)-cline_size)){
@@ -624,7 +628,11 @@ int main(int argc, char **argv)
   inFile=argv_utf8[optind];
   outFile=argv_utf8[optind+1];
 
-  if(cline_size>0)comment_add(&inopt.comments, &inopt.comments_length, "ENCODER_OPTIONS", ENCODER_string);
+  if(cline_size>0 && encoder_comments)comment_add(&inopt.comments, &inopt.comments_length, "ENCODER_OPTIONS", ENCODER_string);
+  if(encoder_comments) {
+  snprintf(ENCODER_string, sizeof(ENCODER_string), "opusenc from %s %s", PACKAGE_NAME, PACKAGE_VERSION);
+  comment_add(&inopt.comments, &inopt.comments_length, "ENCODER", ENCODER_string);
+  }
 
   if(strcmp(inFile, "-")==0){
 #if defined WIN32 || defined _WIN32
